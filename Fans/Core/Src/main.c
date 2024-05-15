@@ -100,6 +100,7 @@ int main(void)
   {
     HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
     HAL_Delay(300);
+    // test
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
