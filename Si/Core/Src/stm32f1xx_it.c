@@ -44,6 +44,7 @@
 extern volatile uint32_t adcBuffer[ADC_AVERAGE_COUNT]; // 保存ADC转换后的数�??
 extern float ADC_Value;             // 保存计算后的数�??
 extern float temperature;
+extern float voltage;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -242,6 +243,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
     }
       averageValue = (float)sum / ADC_AVERAGE_COUNT;
       ADC_Value = averageValue * 3.3 / 4096;
+      voltage = ADC_Value * 1000;
     // temperature = (V25 - ADC_Value[1]) / AVG_SLOPE + 25; // 内部温度传感器得到的温度
   }
 }

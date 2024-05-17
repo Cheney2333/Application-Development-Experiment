@@ -55,6 +55,7 @@ void Error_Handler(void);
 /* USER CODE BEGIN EFP */
   void PWM_Breath(int delay_ms);
   void OLEDShow(void);
+  void adjustBrightness(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
