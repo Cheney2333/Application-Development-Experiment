@@ -52,7 +52,7 @@
 char oledString[30];
 volatile uint32_t adcBuffer[ADC_AVERAGE_COUNT]; // 保存ADC转换后的数�??
 float ADC_Value = 0.0;                          // 保存计算后的数�??
-float temperature = 0.0;                        // 内部温度传感�??
+float temperature = 0.0;                        // 内部温度传感�???
 float voltage = 0.0;
 /* USER CODE END PV */
 
@@ -176,7 +176,13 @@ void OLEDShow()
 
 void adjustBrightness()
 {
-  __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, (int)(0.6 * voltage));
+  float PWM = 0.0;
+  if (voltage < 100)
+    PWM = 10;
+  else
+    PWM = 2.54286 * voltage - 244.286;
+
+  __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, (int)PWM);
 }
 /* USER CODE END 4 */
 
