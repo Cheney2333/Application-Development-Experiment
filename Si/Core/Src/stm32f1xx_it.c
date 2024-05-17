@@ -41,7 +41,9 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
-
+extern volatile uint32_t adcBuffer[ADC_AVERAGE_COUNT]; // 保存ADC转换后的数�??
+extern float ADC_Value;             // 保存计算后的数�??
+extern float temperature;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -228,5 +230,19 @@ void TIM1_UP_IRQHandler(void)
 }
 
 /* USER CODE BEGIN 1 */
-
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
+{
+  if (hadc->Instance == ADC1)
+  {
+    uint32_t sum = 0;                           // 缓冲区求�?
+    float averageValue = 0.0;                     // 单个通道的平均�??
+    for (uint16_t i = 0; i < ADC_AVERAGE_COUNT;) // 各个通道求和
+    {
+      sum += adcBuffer[i++];
+    }
+      averageValue = (float)sum / ADC_AVERAGE_COUNT;
+      ADC_Value = averageValue * 3.3 / 4096;
+    // temperature = (V25 - ADC_Value[1]) / AVG_SLOPE + 25; // 内部温度传感器得到的温度
+  }
+}
 /* USER CODE END 1 */

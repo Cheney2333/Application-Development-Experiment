@@ -4,6 +4,7 @@
 "si\gpio.o"
 "si\adc.o"
 "si\dma.o"
+"si\i2c.o"
 "si\tim.o"
 "si\stm32f1xx_it.o"
 "si\stm32f1xx_hal_msp.o"
@@ -20,10 +21,13 @@
 "si\stm32f1xx_hal_flash.o"
 "si\stm32f1xx_hal_flash_ex.o"
 "si\stm32f1xx_hal_exti.o"
+"si\stm32f1xx_hal_i2c.o"
 "si\stm32f1xx_hal_tim.o"
 "si\stm32f1xx_hal_tim_ex.o"
 "si\system_stm32f1xx.o"
---strict --scatter "Si\Si.sct"
+"si\oled.o"
+"si\oledfont.o"
+--library_type=microlib --strict --scatter "Si\Si.sct"
 --summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers
 --list "Si.map" -o Si\Si.axf

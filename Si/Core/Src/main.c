@@ -1,31 +1,34 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2024 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file           : main.c
+ * @brief          : Main program body
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2024 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "adc.h"
 #include "dma.h"
+#include "i2c.h"
 #include "tim.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "oled.h"
+#include "stdio.h"
+#include "string.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -46,7 +49,10 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+char oledString[30];
+volatile uint32_t adcBuffer[ADC_AVERAGE_COUNT]; // 保存ADC转换后的数�??
+float ADC_Value = 0.0;                                 // 保存计算后的数�??
+float temperature = 0.0;                                            // 内部温度传感�??
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -93,15 +99,20 @@ int main(void)
   MX_ADC1_Init();
   MX_TIM1_Init();
   MX_TIM2_Init();
+  MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
+  OLED_Init(); // 初始化OLED
+  OLED_Clear();
+  HAL_TIM_Base_Start_IT(&htim1);
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+  HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adcBuffer, ADC_AVERAGE_COUNT);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    PWM_Breath(2);
+    OLEDShow();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -156,30 +167,44 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-void PWM_Breath(int delay_ms) {
-    uint16_t brightness = 0;
-    int8_t direction = 1;
+void PWM_Breath(int delay_ms)
+{
+  uint16_t brightness = 0;
+  int8_t direction = 1;
 
-    while (1) {
-        // 更新 PWM 占空比
-        TIM_HandleTypeDef *htim = &htim2;
-        __HAL_TIM_SET_COMPARE(htim, TIM_CHANNEL_1, brightness);
+  while (1)
+  {
+    // 更新 PWM 占空�???
+    TIM_HandleTypeDef *htim = &htim2;
+    __HAL_TIM_SET_COMPARE(htim, TIM_CHANNEL_1, brightness);
 
-        // 更新亮度值
-        brightness += direction;
+    // 更新亮度�???
+    brightness += direction;
 
-        // 如果亮度值达到极限，则改变方向
-        if (brightness >= 300) {
-            brightness = 300;
-            direction = -1;
-        } else if (brightness <= 0) {
-            brightness = 0;
-            direction = 1;
-        }
-
-        // 延时以实现平滑过渡
-        HAL_Delay(delay_ms);
+    // 如果亮度值达到极限，则改变方�???
+    if (brightness >= 300)
+    {
+      brightness = 300;
+      direction = -1;
     }
+    else if (brightness <= 0)
+    {
+      brightness = 0;
+      direction = 1;
+    }
+
+    // 延时以实现平滑过�???
+    HAL_Delay(delay_ms);
+  }
+}
+
+void OLEDShow()
+{
+  // sprintf(oledString, "temp:%.1fC  ", temperature);
+  // OLED_ShowString(0, 0, (char *)oledString, 16, 0);
+
+  sprintf(oledString, "voltage:%3.0fmV  ", ADC_Value * 1000.0);
+  OLED_ShowString(0, 0, (char *)oledString, 16, 0);
 }
 /* USER CODE END 4 */
 
