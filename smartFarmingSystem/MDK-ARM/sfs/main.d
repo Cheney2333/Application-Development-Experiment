@@ -41,4 +41,4 @@ sfs\main.o: ../HARDWARE/OLED/oled.h
 sfs\main.o: ../HARDWARE/OLED/oledfont.h
 sfs\main.o: D:\Keil_v5\ARM\ARM_Compiler_5.06u7\Bin\..\include\stdio.h
 sfs\main.o: D:\Keil_v5\ARM\ARM_Compiler_5.06u7\Bin\..\include\string.h
-sfs\main.o: ..\HARDWARE\DHT11\dht11.h
+sfs\main.o: ../HARDWARE/DHT11/dht11.h

@@ -109,45 +109,50 @@ u8 DH11_Read(void)
   u8 retry = 0;
   u8 i = 0;
 
-  DATA_OUTPUT(0); // 设置为输出模式MCU向DH11发送信号
-  HAL_Delay(18);
-  DATA_SET();
-  Delay_us(20);
+  DATA_OUTPUT(0); // 设置为输出模式，MCU向DH11发送信号
+  HAL_Delay(18);  // 延迟18毫秒
+  DATA_SET();     // 设置数据线为高电平
+  Delay_us(20);   // 延迟20微秒
 
-  DATA_INPUT(); // 设置为输入模式DH11向MCU发送信号
-  Delay_us(20);
-  if (DATA_READ() == 0)
+  DATA_INPUT(); // 设置为输入模式，准备接收DH11发送的数据
+  Delay_us(20); // 延迟20微秒
+
+  // 检测DH11是否响应
+  if (DATA_READ() == 0) // 如果数据线为低电平，说明DH11已经响应
   {
+    // 等待数据线拉高
     while (DATA_READ() == 0 && retry < 100)
     {
-      Delay_us(1);
-      retry = 0;
-    }
-    retry = 0;
-    while (DATA_READ() == 1 && retry < 100)
-    {
-      Delay_us(1);
+      Delay_us(1); // 延迟1微秒
       retry++;
     }
     retry = 0;
 
-    for (i = 0; i < 5; i++) // Data[0]湿度， Data[2]温度。Data[1]和Data[3]分别为0和2的小数位。Data[4]用于校验。
+    // 等待数据线拉低
+    while (DATA_READ() == 1 && retry < 100)
     {
-      DH11_data.Data[i] = DH11_Read_Byte();
+      Delay_us(1); // 延迟1微秒
+      retry++;
     }
-    Delay_us(50);
+    retry = 0;
+
+    // 读取数据
+    for (i = 0; i < 5; i++) // 数据格式：Data[0]湿度整数位，Data[1]湿度小数位，Data[2]温度整数位，Data[3]温度小数位，Data[4]校验和
+    {
+      DH11_data.Data[i] = DH11_Read_Byte(); // 读取一个字节数据
+    }
+    Delay_us(50); // 延迟50微秒
+
+    // 数据校验
+    u32 sum = DH11_data.Data[0] + DH11_data.Data[1] + DH11_data.Data[2] + DH11_data.Data[3]; // 计算校验和
+    if ((sum) == DH11_data.Data[4])                                                          // 如果校验和匹配
+    {
+      DH11_data.humidity = DH11_data.Data[0] + DH11_data.Data[1] / 10.0; // 获取湿度值（包含小数）
+      DH11_data.temp = DH11_data.Data[2] + DH11_data.Data[3] / 10.0;     // 获取温度值（包含小数）
+      return 1;                                                          // 返回成功
+    }
   }
-  u32 sum = DH11_data.Data[0] + DH11_data.Data[1] + DH11_data.Data[2] + DH11_data.Data[3]; // 校验
-  if ((sum) == DH11_data.Data[4])
-  {
-    DH11_data.humidity = DH11_data.Data[0]; // 获取湿度
-    DH11_data.temp = DH11_data.Data[2];     // 获取温度
-    return 1;
-  }
-  else
-  {
-    return 0;
-  }
+  return 0; // 返回失败
 }
 
 void Test(void)

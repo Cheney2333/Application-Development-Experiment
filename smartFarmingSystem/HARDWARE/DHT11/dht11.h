@@ -17,8 +17,8 @@ typedef struct
 {
   u8 Data[5]; // 数据存放数组
   u8 index;
-  u8 temp;     // 温度
-  u8 humidity; // 湿度
+  float temp;     // 温度
+  float humidity; // 湿度
 
 } DH11_DATA;
 
@@ -26,6 +26,4 @@ extern DH11_DATA DH11_data; // DH11属性封装
 
 void DH11_Task(void); // 后台轮询调用
 
-#define DATA_Pin GPIO_PIN_7
-#define DATA_GPIO_Port GPIOA
 #endif

@@ -69,8 +69,8 @@ void Error_Handler(void);
 #define IN1_GPIO_Port GPIOB
 #define IN2_Pin GPIO_PIN_15
 #define IN2_GPIO_Port GPIOB
-#define DHT11_DATA_Pin GPIO_PIN_8
-#define DHT11_DATA_GPIO_Port GPIOA
+#define DATA_Pin GPIO_PIN_8
+#define DATA_GPIO_Port GPIOA
 #define OLED_SCL_Pin GPIO_PIN_6
 #define OLED_SCL_GPIO_Port GPIOB
 #define OLED_SDA_Pin GPIO_PIN_7

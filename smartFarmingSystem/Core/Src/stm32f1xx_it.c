@@ -1,20 +1,20 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file    stm32f1xx_it.c
-  * @brief   Interrupt Service Routines.
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2024 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file    stm32f1xx_it.c
+ * @brief   Interrupt Service Routines.
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2024 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
@@ -22,6 +22,9 @@
 #include "stm32f1xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "string.h"
+#include "usart.h"
+#include "stdio.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -42,9 +45,15 @@
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
 extern volatile uint32_t adcBuffer[ADC_AVERAGE_COUNT]; // 保存ADC转换后的数�??
-extern float ADC_Value;             // 保存计算后的数�??
+extern float ADC_Value;                                // 保存计算后的数�??
 extern float temperature;
 extern float voltage;
+
+extern uint8_t Uart1RxBuff;         // ???????????
+extern uint8_t Uart1DataBuff[5000]; // ???????????
+extern int Rx1Line;                 // ????????
+
+extern float PWM_FAN;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -60,6 +69,7 @@ extern float voltage;
 /* External variables --------------------------------------------------------*/
 extern DMA_HandleTypeDef hdma_adc1;
 extern TIM_HandleTypeDef htim1;
+extern UART_HandleTypeDef huart2;
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */
@@ -76,7 +86,7 @@ void NMI_Handler(void)
 
   /* USER CODE END NonMaskableInt_IRQn 0 */
   /* USER CODE BEGIN NonMaskableInt_IRQn 1 */
-   while (1)
+  while (1)
   {
   }
   /* USER CODE END NonMaskableInt_IRQn 1 */
@@ -230,21 +240,64 @@ void TIM1_UP_IRQHandler(void)
   /* USER CODE END TIM1_UP_IRQn 1 */
 }
 
+/**
+  * @brief This function handles USART2 global interrupt.
+  */
+void USART2_IRQHandler(void)
+{
+  /* USER CODE BEGIN USART2_IRQn 0 */
+
+  /* USER CODE END USART2_IRQn 0 */
+  HAL_UART_IRQHandler(&huart2);
+  /* USER CODE BEGIN USART2_IRQn 1 */
+
+  /* USER CODE END USART2_IRQn 1 */
+}
+
 /* USER CODE BEGIN 1 */
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 {
   if (hadc->Instance == ADC1)
   {
-    uint32_t sum = 0;                           // 缓冲区求�?
-    float averageValue = 0.0;                     // 单个通道的平均�??
+    uint32_t sum = 0;                            // 缓冲区求�?
+    float averageValue = 0.0;                    // 单个通道的平均�??
     for (uint16_t i = 0; i < ADC_AVERAGE_COUNT;) // 各个通道求和
     {
       sum += adcBuffer[i++];
     }
-      averageValue = (float)sum / ADC_AVERAGE_COUNT;
-      ADC_Value = averageValue * 3.3 / 4096;
-      voltage = ADC_Value * 1000;
+    averageValue = (float)sum / ADC_AVERAGE_COUNT;
+    ADC_Value = averageValue * 3.3 / 4096;
+    voltage = ADC_Value * 1000;
     // temperature = (V25 - ADC_Value[1]) / AVG_SLOPE + 25; // 内部温度传感器得到的温度
+  }
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+  if (huart == &huart2) // ?????
+  {
+    Rx1Line++;                                // ??????????????????1
+    Uart1DataBuff[Rx1Line - 1] = Uart1RxBuff; // ????????????????
+
+    if (Uart1RxBuff == '\n') // ???????
+    {
+      if (sscanf((const char *)Uart1DataBuff, "FAN_POWER:%f\r\n", &PWM_FAN) == 1)
+      {
+        PWM_FAN = (int)PWM_FAN;
+      }
+      // printf("x = %d, y = %d\r\n", RedX, RedY);
+      memset(Uart1DataBuff, 0, sizeof(Uart1DataBuff)); // ??????
+      Rx1Line = 0;                                     // ??????
+    }
+
+    if (__HAL_UART_GET_FLAG(&huart2, UART_FLAG_ORE)) // ????
+    {
+      uint32_t temp = USART2->SR;
+      temp = USART2->DR;
+    }
+
+    Uart1RxBuff = 0;
+    HAL_UART_Receive_IT(&huart2, &Uart1RxBuff, 1); // ???????????????????????????????????
   }
 }
 /* USER CODE END 1 */

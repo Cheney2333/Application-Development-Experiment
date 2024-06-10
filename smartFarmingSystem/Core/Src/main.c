@@ -56,6 +56,14 @@ volatile uint32_t adcBuffer[ADC_AVERAGE_COUNT];
 float ADC_Value = 0.0;
 float temperature = 0.0;
 float voltage = 0.0;
+extern DH11_DATA DH11_data;
+int tim1Count = 0;
+
+uint8_t Uart1RxBuff;         // 进入中断接收数据的数�?
+uint8_t Uart1DataBuff[5000]; // 保存接收到的数据的数�?
+int Rx1Line = 0;             // 接收到的数据长度
+
+float PWM_FAN = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -106,11 +114,15 @@ int main(void)
   MX_TIM3_Init();
   MX_TIM4_Init();
   MX_USART1_UART_Init();
+  MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
   OLED_Init(); // 初始化OLED
   OLED_Clear();
+  HAL_Delay(1000);
   HAL_TIM_Base_Start_IT(&htim1);
+  HAL_UART_Receive_IT(&huart2, &Uart1RxBuff, 1); // 串口1接收中断
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
   HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adcBuffer, ADC_AVERAGE_COUNT);
   /* USER CODE END 2 */
 
@@ -119,7 +131,6 @@ int main(void)
   while (1)
   {
     OLEDShow();
-    adjustBrightness();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -174,10 +185,30 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  tim1Count++;
+  if (htim == &htim1) // htim1 100Hz 10ms
+  {
+    adjustBrightness();
+    __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, (int)PWM_FAN);
+    if (tim1Count > 5)
+    {
+      DH11_Task();
+      tim1Count = 0;
+    }
+    printf("data:%.1f,%.1f,%.1f\n", DH11_data.temp, DH11_data.humidity, voltage * 100.0 / 500.0);
+  }
+}
+
 void OLEDShow()
 {
   sprintf(oledString, "voltage:%3.0fmV  ", voltage);
   OLED_ShowString(0, 0, (char *)oledString, 16, 0);
+  sprintf(oledString, "temp:%2.1fC ", DH11_data.temp);
+  OLED_ShowString(0, 2, (char *)oledString, 16, 0);
+  sprintf(oledString, "humidity:%2.0f%%  ", DH11_data.humidity);
+  OLED_ShowString(0, 4, (char *)oledString, 16, 0);
 }
 
 void adjustBrightness()

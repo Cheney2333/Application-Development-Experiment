@@ -32,3 +32,6 @@ sfs\stm32f1xx_it.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h
 sfs\stm32f1xx_it.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h
 sfs\stm32f1xx_it.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h
 sfs\stm32f1xx_it.o: ../Core/Inc/stm32f1xx_it.h
+sfs\stm32f1xx_it.o: D:\Keil_v5\ARM\ARM_Compiler_5.06u7\Bin\..\include\string.h
+sfs\stm32f1xx_it.o: ../Core/Inc/usart.h
+sfs\stm32f1xx_it.o: D:\Keil_v5\ARM\ARM_Compiler_5.06u7\Bin\..\include\stdio.h
